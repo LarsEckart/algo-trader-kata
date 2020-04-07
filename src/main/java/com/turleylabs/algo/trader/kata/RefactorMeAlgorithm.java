@@ -1,6 +1,10 @@
 package com.turleylabs.algo.trader.kata;
 
-import com.turleylabs.algo.trader.kata.framework.*;
+import com.turleylabs.algo.trader.kata.framework.BaseAlgorithm;
+import com.turleylabs.algo.trader.kata.framework.CBOE;
+import com.turleylabs.algo.trader.kata.framework.Holding;
+import com.turleylabs.algo.trader.kata.framework.SimpleMovingAverage;
+import com.turleylabs.algo.trader.kata.framework.Slice;
 
 import java.time.LocalDate;
 
@@ -21,25 +25,28 @@ public class RefactorMeAlgorithm extends BaseAlgorithm {
     boolean tookProfits;
 
     public void initialize() {
-        this.setStartDate(2010, 3, 23);  //Set Start Date
+        this.setStartDate(2010, 3, 23);
         this.setEndDate(2020, 03, 06);
 
-        this.setCash(100000);             //Set Strategy Cash
+        this.setCash(100000);
 
         movingAverage200 = this.SMA(symbol, 200);
         movingAverage50 = this.SMA(symbol, 50);
         movingAverage21 = this.SMA(symbol, 21);
         movingAverage10 = this.SMA(symbol, 10);
-
     }
 
     protected void onData(Slice data) {
         if (data.getCBOE("VIX") != null) {
             lastVix = data.getCBOE("VIX");
         }
-        if (previous == getDate()) return;
+        if (previous == getDate()) {
+            return;
+        }
 
-        if (!movingAverage200.isReady()) return;
+        if (!movingAverage200.isReady()) {
+            return;
+        }
 
         if (data.get(symbol) == null) {
             this.log(String.format("No data for symbol %s", symbol));
@@ -55,7 +62,7 @@ public class RefactorMeAlgorithm extends BaseAlgorithm {
                     && movingAverage10.getValue() > movingAverage21.getValue()
                     && movingAverage10.getValue() > previousMovingAverage10
                     && movingAverage21.getValue() > previousMovingAverage21
-                    && (double) (lastVix.getClose()) < 25.0
+                    && lastVix.getClose() < 25.0
                     && !(data.get(symbol).getPrice() >= (movingAverage50.getValue() * 1.15) && data.get(symbol).getPrice() >= (movingAverage200.getValue() * 1.40))
                     && (data.get(symbol).getPrice() - movingAverage10.getValue()) / movingAverage10.getValue() < 0.07) {
                 this.log(String.format("Buy %s Vix %.4f. above 10 MA %.4f", symbol, lastVix.getClose(), (data.get(symbol).getPrice() - movingAverage10.getValue()) / movingAverage10.getValue()));
@@ -71,7 +78,7 @@ public class RefactorMeAlgorithm extends BaseAlgorithm {
                 this.log(String.format("Sell %s loss of 50 day. Gain %.4f. Vix %.4f", symbol, change, lastVix.getClose()));
                 this.liquidate(symbol);
             } else {
-                if ((double) (lastVix.getClose()) > 28.0) {
+                if (lastVix.getClose() > 28.0) {
                     this.log(String.format("Sell %s high volatility. Gain %.4f. Vix %.4f", symbol, change, lastVix.getClose()));
                     this.liquidate(symbol);
                 } else {
