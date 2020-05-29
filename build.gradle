@@ -12,15 +12,29 @@ repositories {
 }
 
 dependencies {
-    def junitVersion = '5.6.1'
+
     def assertjVersion = '3.15.0'
     def approvalVersion = '4.0.2'
 
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:${junitVersion}")
+    implementation("com.approvaltests:approvaltests:${approvalVersion}")
+
+    def junit4Version   = '4.13'
+    def junitBomVersion = '5.6.2'
+
+    testImplementation(platform("org.junit:junit-bom:$junitBomVersion"))
+
+    // JUnit Jupiter API and TestEngine implementation
+    testImplementation("org.junit.jupiter:junit-jupiter")
+
+    testImplementation("junit:junit:${junit4Version}")
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine") {
+        because 'allows JUnit 3 and JUnit 4 tests to run'
+    }
+
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher") {
+        because 'allows tests to run from IDEs that bundle older version of launcher'
+    }
     testImplementation("org.assertj:assertj-core:${assertjVersion}")
-    testImplementation("com.approvaltests:approvaltests:${approvalVersion}")
 }
 
 test {
